@@ -13,18 +13,20 @@ import java.util.UUID;
 
 @Repository
 public interface RolePermissionRepository extends JpaRepository<RolePermission, UUID> {
+
     Page<RolePermission> findAll(Pageable pageable);
 
     List<RolePermission> findByIsActiveTrue();
 
     Page<RolePermission> findByIsActive(Boolean isActive, Pageable pageable);
 
-    List<RolePermission> findByUserId(UUID userId);
-
     List<RolePermission> findByRoleId(UUID roleId);
 
-    @Query("SELECT ur FROM RolePermission ur WHERE ur.userId = :userId AND ur.deletedAt IS NULL")
-    List<RolePermission> findActiveRolesByUserId(UUID userId);
-
     List<RolePermission> findByPermissionId(UUID permissionId);
+
+    @Query("SELECT rp FROM RolePermission rp WHERE rp.roleId = :roleId AND rp.deletedAt IS NULL")
+    List<RolePermission> findActivePermissionsByRoleId(UUID roleId);
+
+    @Query("SELECT rp FROM RolePermission rp WHERE rp.permissionId = :permissionId AND rp.deletedAt IS NULL")
+    List<RolePermission> findActiveRolesByPermissionId(UUID permissionId);
 }

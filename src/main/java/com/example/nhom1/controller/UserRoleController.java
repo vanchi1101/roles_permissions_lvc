@@ -26,7 +26,7 @@ public class UserRoleController {
     @GetMapping
     public Page<UserRole> getAll(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "created_at,desc") String sort) {
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.fromString(sort.split(",")[1]), sort.split(",")[0]));
         return service.getAll(pageable);

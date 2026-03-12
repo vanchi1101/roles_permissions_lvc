@@ -24,11 +24,13 @@ public class RolePermissionController {
     }
 
     @GetMapping
-    public Page<RolePermission> getAll(@RequestParam(defaultValue = "0") int page,
+    public Page<RolePermission> getAll(
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "created_at,desc") String sort) {
-        Pageable pageable = PageRequest.of(page, size,
-                Sort.by(Sort.Direction.fromString(sort.split(",")[1]), sort.split(",")[0]));
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        String[] sortParts = sort.split(",");
+        Sort.Direction direction = Sort.Direction.fromString(sortParts[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
         return service.getAll(pageable);
     }
 
@@ -38,8 +40,9 @@ public class RolePermissionController {
     }
 
     @PostMapping
-    public RolePermission create(@RequestBody RolePermission RolePermission) { // body chỉ cần userId, roleId
-        return service.assignRole(RolePermission.getId(), RolePermission.getRoleId());
+    public RolePermission create(@RequestBody RolePermission dto) {
+        // DTO chỉ cần roleId và permissionId
+        return service.assignPermission(dto.getRoleId(), dto.getPermissionId());
     }
 
     @PutMapping("/{id}")
@@ -53,26 +56,22 @@ public class RolePermissionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/users/{userId}/roles")
-    public List<RolePermission> getRolesByUser(@PathVariable UUID userId) {
-        return service.getRolesByPermission(userId);
-    }
-
-    @GetMapping("/roles/{roleId}/users")
-    public List<RolePermission> getUsersByRole(@PathVariable UUID roleId) {
+    @GetMapping("/roles/{roleId}/permissions")
+    public List<RolePermission> getPermissionsByRole(@PathVariable UUID roleId) {
         return service.getPermissionsByRole(roleId);
     }
 
-    @GetMapping("/search")
-    public Page<RolePermission> search(@RequestParam UUID userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return service.searchByUserId(userId, PageRequest.of(page, size));
+    @GetMapping("/permissions/{permissionId}/roles")
+    public List<RolePermission> getRolesByPermission(@PathVariable UUID permissionId) {
+        return service.getRolesByPermission(permissionId);
     }
 
-    @GetMapping("/isActive=true") // hỗ trợ query param isActive
-    public List<RolePermission> getActive() {
-        return service.getAll(PageRequest.of(0, 1000)).getContent(); // hoặc custom
+    @GetMapping("/search")
+    public Page<RolePermission> search(
+            @RequestParam UUID roleId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return service.searchByRoleId(roleId, PageRequest.of(page, size));
     }
 
     @PutMapping("/{id}/lock")

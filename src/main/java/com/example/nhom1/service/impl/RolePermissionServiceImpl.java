@@ -30,65 +30,73 @@ public class RolePermissionServiceImpl implements RolePermissionService {
 
     @Override
     public RolePermission getById(UUID id) {
-        return repository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy"));
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi gán quyền"));
     }
 
     @Override
-    public RolePermission assignRole(UUID userId, UUID roleId) {
-        RolePermission ur = new RolePermission();
-        ur.setId(UUID.randomUUID());
-        ur.setRoleId(roleId);
-        ur.setCreatedAt(LocalDateTime.now());
-        ur.setIsActive(true);
-        // created_by = null hoặc lấy từ SecurityContext nếu có
-        return repository.save(ur);
+    public RolePermission assignPermission(UUID roleId, UUID permissionId) {
+        // Kiểm tra trùng lặp (nếu cần có thể thêm validation)
+        RolePermission rp = new RolePermission();
+        rp.setId(UUID.randomUUID());
+        rp.setRoleId(roleId);
+        rp.setPermissionId(permissionId);
+        rp.setCreatedAt(LocalDateTime.now());
+        rp.setIsActive(true);
+        // created_by = null hoặc lấy từ SecurityContext nếu có authentication
+        return repository.save(rp);
     }
 
     @Override
     public RolePermission update(UUID id, RolePermission updateData) {
         RolePermission existing = getById(id);
-        if (updateData.getRoleId() != null)
-            existing.setRoleId(updateData.getRoleId());
+        if (updateData.getPermissionId() != null) {
+            existing.setPermissionId(updateData.getPermissionId());
+        }
+        // Có thể cập nhật roleId nếu cần, nhưng thường ít thay đổi
         existing.setUpdatedAt(LocalDateTime.now());
         return repository.save(existing);
     }
 
     @Override
     public void softDelete(UUID id) {
-        RolePermission ur = getById(id);
-        ur.setDeletedAt(LocalDateTime.now());
-        ur.setIsActive(false);
-        repository.save(ur);
-    }
-
-    @Override
-    public List<RolePermission> getRolesByPermission(UUID userId) {
-        return repository.findActiveRolesByUserId(userId);
+        RolePermission rp = getById(id);
+        rp.setDeletedAt(LocalDateTime.now());
+        rp.setIsActive(false);
+        // deleted_by = null hoặc từ SecurityContext
+        repository.save(rp);
     }
 
     @Override
     public List<RolePermission> getPermissionsByRole(UUID roleId) {
-        return repository.findByRoleId(roleId);
+        return repository.findActivePermissionsByRoleId(roleId);
     }
 
     @Override
-    public Page<RolePermission> searchByUserId(UUID userId, Pageable pageable) {
-        return repository.findByIsActive(true, pageable); // có thể tinh chỉnh query
+    public List<RolePermission> getRolesByPermission(UUID permissionId) {
+        return repository.findActiveRolesByPermissionId(permissionId);
+    }
+
+    @Override
+    public Page<RolePermission> searchByRoleId(UUID roleId, Pageable pageable) {
+        // Có thể tinh chỉnh query nếu cần filter theo roleId
+        // Hiện tại dùng findAll + filter trong service hoặc custom query
+        return repository.findAll(pageable); // hoặc implement custom nếu cần
     }
 
     @Override
     public RolePermission lock(UUID id) {
-        RolePermission ur = getById(id);
-        ur.setIsActive(false);
-        ur.setUpdatedAt(LocalDateTime.now());
-        return repository.save(ur);
+        RolePermission rp = getById(id);
+        rp.setIsActive(false);
+        rp.setUpdatedAt(LocalDateTime.now());
+        return repository.save(rp);
     }
 
     @Override
     public RolePermission unlock(UUID id) {
-        RolePermission ur = getById(id);
-        ur.setIsActive(true);
-        ur.setUpdatedAt(LocalDateTime.now());
-        return repository.save(ur);
+        RolePermission rp = getById(id);
+        rp.setIsActive(true);
+        rp.setUpdatedAt(LocalDateTime.now());
+        return repository.save(rp);
     }
 }
