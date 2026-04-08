@@ -31,8 +31,8 @@ public class RoleService {
     public Role updateRole(UUID id, Role roleData) {
         Role role = roleRepository.findByIdAndDeletedAtIsNull(id).orElseThrow();
 
-        role.setRoleCode(roleData.getRoleCode());
-        role.setRoleName(roleData.getRoleName());
+        role.setCode(roleData.getCode());
+        role.setName(roleData.getName());
         role.setDescription(roleData.getDescription());
 
         return roleRepository.save(role);
@@ -43,7 +43,7 @@ public class RoleService {
     }
 
     public List<Role> searchRoles(String name, String code) {
-        return roleRepository.findByRoleNameContainingIgnoreCaseAndRoleCodeContainingIgnoreCaseAndDeletedAtIsNull(name, code);
+        return roleRepository.findByNameContainingIgnoreCaseAndCodeContainingIgnoreCaseAndDeletedAtIsNull(name, code);
     }
 
     public List<Role> getActiveRoles(Boolean isActive) {
